@@ -77,7 +77,7 @@ Turnover at each rebalance is defined as:
 
 $$\text{Turnover} = \sum_{i=1}^{N} |w_i^{\text{target}} - w_i^{\text{drifted}}|$$
 
-Transaction cost is deducted as $\text{fee\_rate} \times \text{Turnover}$ at each rebalance event.
+Transaction cost is deducted as `fee_rate × Turnover` at each rebalance event.
 
 **Baselines:**
 - Equal-weight (1/N) portfolio, rebalanced quarterly
