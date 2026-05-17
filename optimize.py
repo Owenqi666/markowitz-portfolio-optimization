@@ -27,7 +27,7 @@ def get_bounds(n, mode="unconstrained"):
     elif mode == "long_only_capped":
         return [(0, 0.25)] * n
     else:
-        return None
+        raise ValueError(f"Unknown mode: {mode}")
 
 
 #core optimization
@@ -75,7 +75,7 @@ def optimize_target_return(miu, sigma, target_ret, mode="unconstrained"):
         w0, method="SLSQP", bounds=bounds, constraints=cons
     )
     if not result.success:
-        pass  # silent — frontier sweeps often hit infeasible edges
+        return None
     return result.x
 
 
@@ -96,7 +96,7 @@ def print_portfolio(w, miu, sigma, rf, tickers, label="Portfolio"):
 if __name__ == "__main__":
     from data import load_data, tickers
 
-    prices, log_ret, miu, sigma, rf = load_data()
+    prices, log_ret, miu, sigma, rf, irx_series = load_data()
 
     print("\n=== Unconstrained ===")
     w_mvp = optimize_min_variance(miu, sigma, "unconstrained")

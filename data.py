@@ -19,9 +19,10 @@ def get_risk_free_rate(start, end):
         if irx.empty:
             sys.exit("Error: no ^IRX data returned.")
 
-        rate = float(irx["Close"].squeeze().dropna().mean()) / 100
+        irx_series = irx["Close"].squeeze().dropna() / 100
+        rate = float(irx_series.mean())
         print(f"[Risk-free] mean 3M T-bill yield ({start} to {end}): {rate:.4f}")
-        return rate
+        return rate, irx_series
     
     except Exception as e:
         sys.exit(f"Error: ^IRX download failed ({e}).")
@@ -74,7 +75,7 @@ def load_data():
     prices = get_prices(tickers, start, end)
     log_ret = compute_returns(prices)
     miu, sigma = estimate_params(log_ret)
-    rf = get_risk_free_rate(start, end)
+    rf, irx_series = get_risk_free_rate(start, end)
 
     print(f"\n  Annualized returns:")
     for i, t in enumerate(tickers):
@@ -82,8 +83,8 @@ def load_data():
     print(f"\n  Covariance matrix shape: {sigma.shape}")
     print(f"  Risk-free rate: {rf:.4f}")
 
-    return prices, log_ret, miu, sigma, rf
+    return prices, log_ret, miu, sigma, rf, irx_series
 
 
 if __name__ == "__main__":
-    prices, log_ret, miu, sigma, rf = load_data()
+    prices, log_ret, miu, sigma, rf, irx_series = load_data()

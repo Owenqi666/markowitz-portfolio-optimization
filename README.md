@@ -18,7 +18,7 @@ Seven asset-class ETFs spanning equities, fixed income, commodities, real estate
 
 **Data:** Daily adjusted close prices from Yahoo Finance, 2015-01-01 to 2025-12-31 (10 years, ~2,516 trading days).
 
-**Risk-free rate:** Live 13-week US T-bill yield (`^IRX`), averaged over the sample period and annualized.
+**Risk-free rate:** Historical average of 13-week US T-bill yield (`^IRX`) over the sample period, annualized. In Walk-Forward validation, risk-free rate is computed per window from the in-sample period to avoid look-ahead bias.
 
 ## Methodology
 
@@ -73,6 +73,8 @@ Per window:
 3. Apply weights to OOS period with quarterly rebalancing
 4. Record OOS return, volatility, Sharpe ratio, max drawdown, and turnover
 
+All returns are reported as arithmetic annualized returns (mean daily return × 252), not CAGR. Arithmetic annualization slightly overstates compounded performance but is standard for short-horizon portfolio comparisons.
+
 Turnover at each rebalance is defined as:
 
 $$\text{Turnover} = \sum_{i=1}^{N} |w_i^{\text{target}} - w_i^{\text{drifted}}|$$
@@ -103,18 +105,18 @@ The unconstrained frontier (blue) lies strictly to the left of the long-only fro
 
 | Metric | Sample | Shrinkage |
 |--------|--------|-----------|
-| Mean OOS Sharpe | 0.9283 | 0.9353 |
-| Mean OOS Return | 0.0983 | 0.0991 |
-| Mean OOS Volatility | 0.1271 | 0.1272 |
-| Mean OOS MDD | −0.1231 | −0.1228 |
-| Mean Turnover | 0.1148 | 0.1155 |
+| Mean OOS Sharpe | 0.9909 | 0.9958 |
+| Mean OOS Return | 0.0946 | 0.0955 |
+| Mean OOS Volatility | 0.1230 | 0.1227 |
+| Mean OOS MDD | −0.1193 | −0.1189 |
+| Mean Turnover | 0.1163 | 0.1170 |
 | **Turnover change** | — | **+0.6%** |
 
 **Baseline comparison (Ledoit-Wolf run):**
 
 | Strategy | Mean OOS Sharpe | Mean OOS Return |
 |----------|----------------|----------------|
-| Optimized (Ledoit-Wolf) | 0.9353 | 0.0991 |
+| Optimized (Ledoit-Wolf) | 0.9958 | 0.0955 |
 | Equal-Weight (1/N) | 0.7857 | 0.0933 |
 | Best In-Sample Asset | 1.0830 | 0.1994 |
 
@@ -126,11 +128,11 @@ Sample and shrinkage results are nearly identical, with turnover marginally incr
 
 **2. Best in-sample asset outperforms Markowitz OOS.**
 
-The single-asset baseline achieves a higher mean OOS Sharpe (1.0830) than the optimized portfolio (0.9353). This is a well-documented phenomenon: the expected return vector $\boldsymbol{\mu}$ estimated from historical means is the least stable input to mean-variance optimization, and estimation error in $\boldsymbol{\mu}$ propagates into extreme portfolio tilts. This finding is consistent with DeMiguel, Garlappi & Uppal (2009), who show that 1/N often outperforms Markowitz in realistic settings due to estimation error.
+The single-asset baseline achieves a higher mean OOS Sharpe (1.0830) than the optimized portfolio (0.9958). This is a well-documented phenomenon: the expected return vector $\boldsymbol{\mu}$ estimated from historical means is the least stable input to mean-variance optimization, and estimation error in $\boldsymbol{\mu}$ propagates into extreme portfolio tilts. This finding is consistent with DeMiguel, Garlappi & Uppal (2009), who show that 1/N often outperforms Markowitz in realistic settings due to estimation error.
 
 **3. Optimized portfolio outperforms equal-weight.**
 
-Despite the estimation error problem, the optimizer (0.9353 Sharpe) beats 1/N (0.7857), suggesting that covariance-based diversification adds value even when return estimates are noisy — the portfolio successfully avoids high-volatility, low-return assets like TLT in the 2022–2025 period.
+Despite the estimation error problem, the optimizer (0.9958 Sharpe) beats 1/N (0.7857), suggesting that covariance-based diversification adds value even when return estimates are noisy — the portfolio successfully avoids high-volatility, low-return assets like TLT in the 2022–2025 period.
 
 **4. Window 5 (OOS 2022–2023) is the worst-performing fold.**
 
@@ -146,6 +148,7 @@ markowitz-portfolio-optimization/
 ├── walkforward.py   # Walk-Forward OOS validation with quarterly rebalancing
 ├── shrinkage.py     # Ledoit-Wolf shrinkage extension
 ├── main.py          # Runner script: full pipeline + comparison table
+├── requirements.txt
 ├── efficient_frontier.png
 └── README.md
 ```
@@ -153,7 +156,7 @@ markowitz-portfolio-optimization/
 ## Usage
 
 ```bash
-pip install yfinance pandas numpy scipy matplotlib scikit-learn
+pip install -r requirements.txt
 python main.py
 ```
 

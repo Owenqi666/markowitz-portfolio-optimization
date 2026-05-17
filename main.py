@@ -10,7 +10,7 @@ from shrinkage import ledoit_wolf_sigma, get_shrinkage_info
 np.random.seed(42)
 
 #step 1: load data and estimate parameters
-prices, log_ret, miu, sigma, rf = load_data()
+prices, log_ret, miu, sigma, rf, irx_series = load_data()
 
 #step 2: full-sample optimization
 print("\n" + "=" * 60)
@@ -32,12 +32,13 @@ print("=" * 60)
 plot_frontier(miu, sigma, rf, tickers)
 
 #step 4: walk-forward with sample covariance
-df_sample = run_walkforward(log_ret, rf, tickers, label="Sample")
+df_sample = run_walkforward(log_ret, rf, tickers, irx_series=irx_series, label="Sample")
 
 #step 5: walk-forward with Ledoit-Wolf shrinkage
 delta = get_shrinkage_info(log_ret.values)
 print(f"\n  Ledoit-Wolf shrinkage intensity (full sample): {delta:.4f}")
 df_shrink = run_walkforward(log_ret, rf, tickers,
+                            irx_series=irx_series,
                             sigma_estimator=ledoit_wolf_sigma,
                             label="Ledoit-Wolf")
 

@@ -21,7 +21,7 @@ def get_shrinkage_info(daily_ret):
 if __name__ == "__main__":
     from data import load_data, tickers
 
-    prices, log_ret, miu, sigma, rf = load_data()
+    prices, log_ret, miu, sigma, rf, irx_series = load_data()
 
     # show shrinkage intensity on full sample
     delta = get_shrinkage_info(log_ret.values)
@@ -29,5 +29,6 @@ if __name__ == "__main__":
 
     # run walk-forward with shrinkage
     df_shrink = run_walkforward(log_ret, rf, tickers,
+                                irx_series=irx_series,
                                 sigma_estimator=ledoit_wolf_sigma,
                                 label="Ledoit-Wolf")

@@ -60,7 +60,7 @@ def compute_metrics(port_rets, rf):
 
 
 #walk-forward engine
-def run_walkforward(log_ret, rf, tickers, sigma_estimator=None, label="Sample"):
+def run_walkforward(log_ret, rf, tickers, irx_series=None, sigma_estimator=None, label="Sample"):
     n = len(log_ret)
     if n < is_window + oos_window:
         sys.exit(f"Error: need at least {is_window + oos_window} days, got {n}.")
@@ -88,26 +88,33 @@ def run_walkforward(log_ret, rf, tickers, sigma_estimator=None, label="Sample"):
         else:
             sigma_is = np.cov(is_ret, rowvar=False) * days
 
-        #get OOS risk-free rate from full-period rf (simplification)
+        #per-window risk-free rate (avoid look-ahead)
+        if irx_series is not None:
+            is_dates_range = log_ret.index[is_start:is_end]
+            irx_window = irx_series.reindex(is_dates_range).dropna()
+            rf_w = float(irx_window.mean()) if len(irx_window) > 0 else rf
+        else:
+            rf_w = rf
+
         #optimize: max-Sharpe, long-only
-        w_opt = optimize_max_sharpe(miu_is, sigma_is, rf, mode="long_only")
+        w_opt = optimize_max_sharpe(miu_is, sigma_is, rf_w, mode="long_only")
 
         #OOS simulation
         oos_ret = log_ret.iloc[is_end:oos_end].values
         port_rets, turnover = simulate_oos(oos_ret, w_opt, rebal_freq, fee_rate)
-        ann_ret, ann_vol, sharpe, mdd = compute_metrics(port_rets, rf)
+        ann_ret, ann_vol, sharpe, mdd = compute_metrics(port_rets, rf_w)
 
         #equal-weight baseline
         ew_w = np.ones(len(tickers)) / len(tickers)
         ew_rets, ew_turn = simulate_oos(oos_ret, ew_w, rebal_freq, fee_rate)
-        ew_ret, ew_vol, ew_sharpe, ew_mdd = compute_metrics(ew_rets, rf)
+        ew_ret, ew_vol, ew_sharpe, ew_mdd = compute_metrics(ew_rets, rf_w)
 
         #best single IS asset baseline
         best_asset_idx = np.argmax(miu_is)
         ba_w = np.zeros(len(tickers))
         ba_w[best_asset_idx] = 1.0
         ba_rets, _ = simulate_oos(oos_ret, ba_w, rebal_freq, fee_rate)
-        ba_ret, ba_vol, ba_sharpe, ba_mdd = compute_metrics(ba_rets, rf)
+        ba_ret, ba_vol, ba_sharpe, ba_mdd = compute_metrics(ba_rets, rf_w)
 
         is_dates = log_ret.index[is_start].strftime("%Y-%m")
         oos_dates = log_ret.index[is_end].strftime("%Y-%m")
@@ -155,5 +162,5 @@ def run_walkforward(log_ret, rf, tickers, sigma_estimator=None, label="Sample"):
 if __name__ == "__main__":
     from data import load_data, tickers
 
-    prices, log_ret, miu, sigma, rf = load_data()
-    run_walkforward(log_ret, rf, tickers)
+    prices, log_ret, miu, sigma, rf, irx_series = load_data()
+    run_walkforward(log_ret, rf, tickers, irx_series=irx_series)

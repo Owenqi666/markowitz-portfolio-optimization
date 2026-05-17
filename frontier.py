@@ -18,6 +18,8 @@ def compute_frontier(miu, sigma, mode="unconstrained", n_points=50):
 
     for tr in target_rets:
         w = optimize_target_return(miu, sigma, tr, mode)
+        if w is None:
+            continue
         r = portfolio_return(w, miu)
         v = portfolio_volatility(w, sigma)
         #skip clearly failed optimizations
@@ -80,5 +82,5 @@ def plot_frontier(miu, sigma, rf, tickers, save_path="efficient_frontier.png"):
 if __name__ == "__main__":
     from data import load_data, tickers
 
-    prices, log_ret, miu, sigma, rf = load_data()
+    prices, log_ret, miu, sigma, rf, irx_series = load_data()
     plot_frontier(miu, sigma, rf, tickers)
